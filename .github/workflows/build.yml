@@ -24,6 +24,16 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Setup signing
+        run: |
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\r\n ' | base64 --decode > android/app/hashiya.jks
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=hashiya.jks
+          EOF
+
       - run: flutter pub get
 
       - run: flutter build apk --release
