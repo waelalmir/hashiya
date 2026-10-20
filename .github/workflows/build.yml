@@ -39,10 +39,12 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build apk --release --build-number=${{ github.run_number }}
+      - run: flutter build apk --release --split-per-abi --build-number=${{ github.run_number }}
 
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: النسخة ${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
