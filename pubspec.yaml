@@ -1,0 +1,34 @@
+name: hashiya
+description: حاشية - قارئ PDF عربي مع ملاحظات وستيكرات
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  # pub يختار أحدث إصدار يناسب نسخة Flutter عندك
+  pdfrx: ^2.1.21
+  file_picker: ^8.1.0
+  path_provider: ^2.1.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/stickers/manifest.json
+    - assets/stickers/png/
+  fonts:
+    - family: IBMPlexSansArabic
+      fonts:
+        - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+        - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700

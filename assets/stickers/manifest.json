@@ -1,0 +1,218 @@
+[
+ {
+  "id": "important",
+  "text": "هام",
+  "shape": "burst",
+  "file": "png/important.png"
+ },
+ {
+  "id": "review",
+  "text": "للمراجعة",
+  "shape": "pill",
+  "file": "png/review.png"
+ },
+ {
+  "id": "memorize",
+  "text": "للحفظ",
+  "shape": "rsq",
+  "file": "png/memorize.png"
+ },
+ {
+  "id": "ask",
+  "text": "للاستفسار",
+  "shape": "bubble",
+  "file": "png/ask.png"
+ },
+ {
+  "id": "excellent",
+  "text": "ممتاز",
+  "shape": "burst",
+  "file": "png/excellent.png"
+ },
+ {
+  "id": "reminder",
+  "text": "تذكير",
+  "shape": "tag",
+  "file": "png/reminder.png"
+ },
+ {
+  "id": "question",
+  "text": "سؤال؟",
+  "shape": "circle",
+  "file": "png/question.png"
+ },
+ {
+  "id": "idea",
+  "text": "فكرة",
+  "shape": "scallop",
+  "file": "png/idea.png"
+ },
+ {
+  "id": "dont_forget",
+  "text": "لا تنسَ",
+  "shape": "banner",
+  "file": "png/dont_forget.png"
+ },
+ {
+  "id": "very_important",
+  "text": "مهم جداً",
+  "shape": "burst",
+  "file": "png/very_important.png"
+ },
+ {
+  "id": "hard",
+  "text": "صعب",
+  "shape": "hex",
+  "file": "png/hard.png"
+ },
+ {
+  "id": "easy",
+  "text": "سهل",
+  "shape": "circle",
+  "file": "png/easy.png"
+ },
+ {
+  "id": "got_it",
+  "text": "فهمت",
+  "shape": "pill",
+  "file": "png/got_it.png"
+ },
+ {
+  "id": "unclear",
+  "text": "غير مفهوم",
+  "shape": "bubble",
+  "file": "png/unclear.png"
+ },
+ {
+  "id": "definition",
+  "text": "تعريف",
+  "shape": "rsq",
+  "file": "png/definition.png"
+ },
+ {
+  "id": "example",
+  "text": "مثال",
+  "shape": "tag",
+  "file": "png/example.png"
+ },
+ {
+  "id": "rule",
+  "text": "قاعدة",
+  "shape": "banner",
+  "file": "png/rule.png"
+ },
+ {
+  "id": "summary",
+  "text": "ملخص",
+  "shape": "scallop",
+  "file": "png/summary.png"
+ },
+ {
+  "id": "exam",
+  "text": "اختبار",
+  "shape": "burst",
+  "file": "png/exam.png"
+ },
+ {
+  "id": "practice",
+  "text": "تطبيق",
+  "shape": "hex",
+  "file": "png/practice.png"
+ },
+ {
+  "id": "discuss",
+  "text": "للنقاش",
+  "shape": "bubble",
+  "file": "png/discuss.png"
+ },
+ {
+  "id": "verify",
+  "text": "تأكد منه",
+  "shape": "rsq",
+  "file": "png/verify.png"
+ },
+ {
+  "id": "common_mistake",
+  "text": "خطأ شائع",
+  "shape": "burst",
+  "file": "png/common_mistake.png"
+ },
+ {
+  "id": "great",
+  "text": "رائع",
+  "shape": "circle",
+  "file": "png/great.png"
+ },
+ {
+  "id": "well_done",
+  "text": "أحسنت",
+  "shape": "pill",
+  "file": "png/well_done.png"
+ },
+ {
+  "id": "teacher",
+  "text": "للأستاذ",
+  "shape": "tag",
+  "file": "png/teacher.png"
+ },
+ {
+  "id": "tomorrow",
+  "text": "غداً",
+  "shape": "rsq",
+  "file": "png/tomorrow.png"
+ },
+ {
+  "id": "urgent",
+  "text": "عاجل",
+  "shape": "banner",
+  "file": "png/urgent.png"
+ },
+ {
+  "id": "review2",
+  "text": "مراجعة ثانية",
+  "shape": "scallop",
+  "file": "png/review2.png"
+ },
+ {
+  "id": "conclusion",
+  "text": "الخلاصة",
+  "shape": "pill",
+  "file": "png/conclusion.png"
+ },
+ {
+  "id": "blank_01",
+  "text": "",
+  "shape": "rsq",
+  "file": "png/blank_01.png"
+ },
+ {
+  "id": "blank_02",
+  "text": "",
+  "shape": "pill",
+  "file": "png/blank_02.png"
+ },
+ {
+  "id": "blank_03",
+  "text": "",
+  "shape": "circle",
+  "file": "png/blank_03.png"
+ },
+ {
+  "id": "blank_04",
+  "text": "",
+  "shape": "bubble",
+  "file": "png/blank_04.png"
+ },
+ {
+  "id": "blank_05",
+  "text": "",
+  "shape": "banner",
+  "file": "png/blank_05.png"
+ },
+ {
+  "id": "blank_06",
+  "text": "",
+  "shape": "tag",
+  "file": "png/blank_06.png"
+ }
+]
