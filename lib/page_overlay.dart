@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'annotations.dart';
 import 'model.dart';
+import 'reading_mode.dart';
 import 'theme.dart';
 
 typedef PinTap = void Function(Pin pin, {bool isNew});
@@ -27,7 +28,7 @@ class PageOverlay extends StatelessWidget {
           if (d != null && d.page == page) strokes.add(d);
           Offset n(Offset o) => Offset((o.dx / w).clamp(0.0, 1.0).toDouble(), (o.dy / h).clamp(0.0, 1.0).toDouble());
 
-          return SizedBox(
+          final content = SizedBox(
             width: w,
             height: h,
             child: Stack(clipBehavior: Clip.none, children: [
@@ -63,7 +64,7 @@ class PageOverlay extends StatelessWidget {
                           kind: tool,
                           color: ann.toolColor[tool] ?? 0xFFE53935,
                           width: tool == 'hl' ? .028 : (tool == 'pen' ? .004 : .005),
-                          pts: (tool == 'arrow' || tool == 'circle') ? [q, q] : [q],
+                          pts: (tool == 'arrow' || tool == 'circle' || tool == 'hl') ? [q, q] : [q],
                         );
                         ann.refresh();
                       }
@@ -76,7 +77,9 @@ class PageOverlay extends StatelessWidget {
                       }
                       final dr = ann.draft;
                       if (dr == null) return;
-                      if (dr.kind == 'arrow' || dr.kind == 'circle') {
+                      if (dr.kind == 'hl') {
+                        dr.pts[1] = Offset(q.dx, dr.pts[0].dy); // خط مستقيم أفقي
+                      } else if (dr.kind == 'arrow' || dr.kind == 'circle') {
                         dr.pts[1] = q;
                       } else {
                         dr.pts.add(q);
@@ -90,6 +93,7 @@ class PageOverlay extends StatelessWidget {
                 ),
             ]),
           );
+          return toneInverts(ann) ? ColorFiltered(colorFilter: kInvert, child: content) : content;
         }),
       );
 }

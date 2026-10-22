@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'app_shell.dart';
+import 'data.dart';
 import 'store.dart';
 import 'theme.dart';
 
@@ -9,6 +10,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await pdfrxFlutterInitialize();
   await Store.load();
+  await AppData.load();
   runApp(const HashiyaApp());
 }
 
