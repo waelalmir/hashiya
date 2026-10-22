@@ -1,7 +1,7 @@
 name: hashiya
 description: حاشية - قارئ PDF عربي مع ملاحظات وستيكرات
 publish_to: none
-version: 0.1.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.9.0
@@ -12,14 +12,26 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-  # pub يختار أحدث إصدار يناسب نسخة Flutter عندك
-  pdfrx: ^2.1.21
+  pdfrx: ">=2.1.21 <2.5.0"
   file_picker: ^8.1.0
   path_provider: ^2.1.4
+  record: ">=5.1.0 <7.0.0"
+  audioplayers: ^6.0.0
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/icon/icon.png
+  adaptive_icon_background: "#054743"
+  adaptive_icon_foreground: assets/icon/icon_fg.png
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/bg/
     - assets/stickers/manifest.json
     - assets/stickers/png/
   fonts:
