@@ -1,0 +1,15 @@
+import 'package:whisper_flutter_new/whisper_flutter_new.dart';
+import '../config.dart';
+
+/// محرك التفريغ الصوتي (whisper.cpp). النموذج يُنزَّل مرة واحدة عند أول استخدام ثم يعمل بدون إنترنت.
+class Transcriber {
+  static const available = true;
+  static Future<String> transcribe(String wavPath) async {
+    final whisper = Whisper(model: WhisperModel.small, downloadHost: kModelHost);
+    final dynamic res = await whisper.transcribe(
+      transcribeRequest: TranscribeRequest(audio: wavPath, language: 'ar', isNoTimestamps: true, splitOnWord: false),
+    );
+    final dynamic t = res is String ? res : (res as dynamic).text;
+    return (t as String).trim();
+  }
+}

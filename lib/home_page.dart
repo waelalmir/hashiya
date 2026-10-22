@@ -15,8 +15,7 @@ class HomePage extends StatelessWidget {
           final recent = [...books]..sort((a, b) => b.openedAt.compareTo(a.openedAt));
           final last = recent.isEmpty ? null : recent.first;
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('الرئيسية', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 20),
+            const PageHeader(title: 'الرئيسية'),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 flex: 3,

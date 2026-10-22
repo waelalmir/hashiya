@@ -31,12 +31,9 @@ class LibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Text('المكتبة', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600)),
-          const Spacer(),
+        PageHeader(title: 'المكتبة', actions: [
           FilledButton.icon(onPressed: () => _add(context), icon: const Icon(Icons.add), label: const Text('إضافة PDF')),
         ]),
-        const SizedBox(height: 20),
         Expanded(
           child: ValueListenableBuilder<List<Book>>(
             valueListenable: Store.books,

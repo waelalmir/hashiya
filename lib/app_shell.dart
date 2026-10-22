@@ -28,13 +28,16 @@ class _AppShellState extends State<AppShell> {
       case 1:
         return const LibraryPage();
       default:
-        return Center(child: Text('${items[index].$1} · في الدفعة التالية', style: const TextStyle(fontSize: 20)));
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          PageHeader(title: items[index].$1),
+          Expanded(child: Center(child: GlassCard(padding: const EdgeInsets.all(32), child: const Text('قريباً · في النسخة الثانية', style: TextStyle(fontSize: 18))))),
+        ]);
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: MountainBackground(
+        body: AppBackground(
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20),

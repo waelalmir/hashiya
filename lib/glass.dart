@@ -2,45 +2,33 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'theme.dart';
 
-class MountainBackground extends StatelessWidget {
-  const MountainBackground({super.key, required this.child});
+class AppBackground extends StatelessWidget {
+  const AppBackground({super.key, required this.child});
   final Widget child;
   @override
   Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [
-        const CustomPaint(painter: _MountainPainter()),
+        Image.asset('assets/bg/bg.jpg', fit: BoxFit.cover),
+        Container(color: HC.green.withValues(alpha: .38)),
         child,
       ]);
 }
 
-class _MountainPainter extends CustomPainter {
-  const _MountainPainter();
+class PageHeader extends StatelessWidget {
+  const PageHeader({super.key, required this.title, this.actions = const []});
+  final String title;
+  final List<Widget> actions;
   @override
-  void paint(Canvas canvas, Size s) {
-    final r = Offset.zero & s;
-    canvas.drawRect(
-        r,
-        Paint()
-          ..shader = const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0E6B61), HC.deep])
-              .createShader(r));
-    canvas.drawCircle(Offset(s.width * .70, s.height * .54), s.width * .18,
-        Paint()..color = HC.cream.withValues(alpha: .12));
-    void poly(List<List<double>> pts, Color c) {
-      final p = Path();
-      for (var i = 0; i < pts.length; i++) {
-        final x = pts[i][0] / 1280 * s.width, y = pts[i][1] / 800 * s.height;
-        i == 0 ? p.moveTo(x, y) : p.lineTo(x, y);
-      }
-      canvas.drawPath(p..close(), Paint()..color = c);
-    }
-    poly([[0, 520], [160, 400], [300, 500], [480, 360], [640, 490], [820, 380], [1000, 500], [1150, 410], [1280, 480], [1280, 800], [0, 800]], HC.mid);
-    poly([[0, 620], [200, 500], [380, 610], [560, 490], [760, 620], [960, 520], [1140, 630], [1280, 560], [1280, 800], [0, 800]], const Color(0xFF06403A));
-    poly([[0, 720], [140, 660], [300, 730], [520, 650], [700, 730], [900, 670], [1100, 740], [1280, 690], [1280, 800], [0, 800]], HC.deep);
-  }
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: SizedBox(
+          height: 48,
+          child: Row(children: [
+            Text(title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600, height: 1)),
+            const Spacer(),
+            ...actions,
+          ]),
+        ),
+      );
 }
 
 class GlassCard extends StatelessWidget {
