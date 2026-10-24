@@ -1,46 +1,98 @@
+
 name: Build APK
+
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Build Hashiya APK
     runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Apply update archive if present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f update.zip ]; then
+            echo "Found update.zip; applying files..."
+            unzip -o -q update.zip -x '.github/*' 'update.zip' 'Update.zip'
+          elif [ -f Update.zip ]; then
+            echo "Found Update.zip; applying files..."
+            unzip -o -q Update.zip -x '.github/*' 'update.zip' 'Update.zip'
+          else
+            echo "No update archive found; using files committed directly to the repository."
+          fi
+
+      - name: Verify required project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in pubspec.yaml lib/main.dart tools/patch_android.py; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Required file is missing: $f"
+              echo "Upload the file to this exact path in the repository, then commit the change."
+              exit 1
+            fi
+          done
+          echo "Required files found."
+          echo "Commit: $(git rev-parse --short HEAD)"
+          echo "Update script: tools/patch_android.py"
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.3'
           channel: stable
           cache: true
 
-      - name: Create android platform if missing
+      - name: Create Android platform if missing
+        shell: bash
         run: |
+          set -euo pipefail
           if [ ! -f android/app/src/main/AndroidManifest.xml ]; then
             flutter create --platforms=android --project-name hashiya --org com.hashiya .
             rm -f test/widget_test.dart
           fi
 
-      - run: python3 tools/patch_android.py
-      - run: flutter pub get
+      - name: Patch Android configuration
+        run: python3 tools/patch_android.py
 
-      - name: Check icon files
-        run: ls -la assets/icon/ || echo "assets/icon folder is MISSING"
+      - name: Configure stable signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tools/debug.keystore || { echo 'ERROR: tools/debug.keystore is missing'; exit 1; }
+          mkdir -p ~/.android
+          cp tools/debug.keystore ~/.android/debug.keystore
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
 
       - name: Generate launcher icons
         run: dart run flutter_launcher_icons
         continue-on-error: true
 
-      - run: flutter build apk --release
+      - name: Build release APK
+        run: flutter build apk --release --build-number=${{ github.run_number }} --dart-define=BUILD_ID=${{ github.run_number }}-$(git rev-parse --short HEAD)
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
           name: hashiya-app
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
