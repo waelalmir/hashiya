@@ -1,3 +1,4 @@
+
 name: hashiya
 description: حاشية - قارئ PDF عربي مع ملاحظات وستيكرات
 publish_to: none
@@ -13,6 +14,7 @@ dependencies:
     sdk: flutter
   intl: any
   pdfrx: ">=2.1.21 <2.5.0"
+  archive: ^4.5.2
   file_picker: ^8.1.0
   path_provider: ^2.1.4
   record: ">=5.1.0 <7.0.0"
