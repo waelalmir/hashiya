@@ -26,12 +26,8 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Enable Flutter web / fix SDK constraints
-        run: flutter config --no-analytics
-
       - name: Install dependencies
-        run: flutter pub get --no-pubspec-overrides
+        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
-        
