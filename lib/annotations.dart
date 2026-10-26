@@ -10,7 +10,6 @@ class Ping extends ChangeNotifier {
   void ping() => notifyListeners();
 }
 
-/// كل ملاحظات كتاب واحد + إعدادات القراءة والأدوات.
 class Annotations extends ChangeNotifier {
   Annotations._(this.bookId);
   final String bookId;
@@ -18,16 +17,19 @@ class Annotations extends ChangeNotifier {
   final stickers = <StickerItem>[];
   final pins = <Pin>[];
   final _undo = <VoidCallback>[];
-  final settings = Ping(); // يتغير عند تغيير الأداة أو وضع القراءة
+  final settings = Ping();
   Stroke? draft;
-  String tool = 'none'; // none | hl | pen | arrow | circle | erase | pin
+  String tool = 'none';
   final toolColor = <String, int>{'hl': 0xFFFFD54F, 'pen': 0xFFE53935, 'arrow': 0xFFE53935, 'circle': 0xFFE53935};
-  String mode = 'original'; // original | paper | night
+  String mode = 'original';
   final tone = <String, List<int>>{
     'paper': [0xFFF2E8C9, 0xFF3C3B37],
     'night': [0xFF16201E, 0xFFD9D4C4],
   };
   double dim = 0;
+  bool hlFree = false; // بند 1: التمييز (خط مستقيم أو رسم حر)
+  String arrowStyle = 'straight'; // بند 6: أنماط الأسهم
+  double widthScale = 1;
   Timer? _t;
 
   File get _file => File('${Store.dir.path}/ann_$bookId.json');
@@ -87,6 +89,21 @@ class Annotations extends ChangeNotifier {
 
   void setColor(int c) {
     if (toolColor.containsKey(tool)) toolColor[tool] = c;
+    settings.ping();
+  }
+
+  void setHlFree(bool v) {
+    hlFree = v;
+    settings.ping();
+  }
+
+  void setArrowStyle(String v) {
+    arrowStyle = v;
+    settings.ping();
+  }
+
+  void setWidthScale(double v) {
+    widthScale = v;
     settings.ping();
   }
 
@@ -165,9 +182,16 @@ class Annotations extends ChangeNotifier {
   }
 
   bool _hit(Stroke s, Offset q, double thr) {
-    if (s.kind == 'arrow') return _segDist(s.pts.first, s.pts.last, q) < thr;
+    if (s.kind == 'arrow' || s.kind == 'hl') {
+      final wide = s.style.contains('curve') || s.style == 'wave' || s.style == 'hand';
+      return _segDist(s.pts.first, s.pts.last, q) < (wide ? thr * 3 : thr);
+    }
     if (s.kind == 'circle') return Rect.fromPoints(s.pts.first, s.pts.last).inflate(thr).contains(q);
-    return s.pts.any((p) => (p - q).distance < thr);
+    if (s.pts.length == 1) return (s.pts.first - q).distance < thr;
+    for (var i = 0; i < s.pts.length - 1; i++) {
+      if (_segDist(s.pts[i], s.pts[i + 1], q) < thr) return true;
+    }
+    return false;
   }
 
   double _segDist(Offset a, Offset b, Offset p) {
