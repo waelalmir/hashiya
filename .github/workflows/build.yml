@@ -22,11 +22,12 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Upgrade dependencies and fix lockfile
+        run: |
+          rm -f pubspec.lock
+          flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
