@@ -90,10 +90,11 @@ class StickerItem {
 }
 
 class Pin {
-  Pin({required this.id, required this.page, required this.x, required this.y, this.note = '', this.audio});
+  Pin({required this.id, required this.page, required this.x, required this.y, this.text = '', this.note = '', this.audio});
   final String id;
   final int page;
   final double x, y;
+  String text;
   String note;
   String? audio;
 
@@ -102,55 +103,21 @@ class Pin {
         'page': page,
         'x': x,
         'y': y,
-        'note': note,
+        'text': text.isNotEmpty ? text : note,
+        'note': note.isNotEmpty ? note : text,
         if (audio != null) 'audio': audio,
       };
 
-  static Pin fromJson(Map<String, dynamic> j) => Pin(
-        id: j['id'] as String,
-        page: j['page'] as int,
-        x: (j['x'] as num).toDouble(),
-        y: (j['y'] as num).toDouble(),
-        note: (j['note'] as String?) ?? '',
-        audio: j['audio'] as String?,
-      );
-}
-
-class Book {
-  Book({
-    required this.id,
-    required this.title,
-    required this.path,
-    this.folder = '',
-    this.lastPage = 1,
-    this.total = 0,
-    this.openedAt = 0,
-  });
-  final String id;
-  String title;
-  final String path;
-  String folder;
-  int lastPage;
-  int total;
-  int openedAt;
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'path': path,
-        'folder': folder,
-        'lastPage': lastPage,
-        'total': total,
-        'openedAt': openedAt,
-      };
-
-  static Book fromJson(Map<String, dynamic> j) => Book(
-        id: j['id'] as String,
-        title: j['title'] as String,
-        path: j['path'] as String,
-        folder: (j['folder'] as String?) ?? '',
-        lastPage: (j['lastPage'] as int?) ?? 1,
-        total: (j['total'] as int?) ?? 0,
-        openedAt: (j['openedAt'] as int?) ?? 0,
-      );
+  static Pin fromJson(Map<String, dynamic> j) {
+    final t = (j['text'] as String?) ?? (j['note'] as String?) ?? '';
+    return Pin(
+      id: j['id'] as String,
+      page: j['page'] as int,
+      x: (j['x'] as num).toDouble(),
+      y: (j['y'] as num).toDouble(),
+      text: t,
+      note: t,
+      audio: j['audio'] as String?,
+    );
+  }
 }
