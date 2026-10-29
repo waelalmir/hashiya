@@ -1,70 +1,106 @@
-
-name: Build Hashiya APK
-
+name: Build APK
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-      - master
-
-permissions:
-  contents: read
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      ocr:
+        description: 'ابنِ أيضاً نسخة OCR أوفلاين التجريبية'
+        type: boolean
+        default: false
 
 jobs:
-  build:
-    name: Build Android APK
+  app:
+    name: التطبيق
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.35.3"
-          channel: stable
-          cache: true
-
-      - name: Prepare Android project
+      - uses: actions/checkout@v5
+      - name: تطبيق update.zip إن وُجد في جذر المستودع
         run: |
-          if [ ! -f android/app/src/main/AndroidManifest.xml ]; then
-            flutter create \
-              --platforms=android \
-              --project-name hashiya \
-              --org com.hashiya .
+          if [ -f update.zip ]; then
+            unzip -o -q update.zip -x '.github/*' 'update.zip' || true
+            echo "تم تطبيق update.zip"
           fi
-
-      - name: Patch Android configuration
+      - name: حذف ملفات قديمة لم تعد مستخدمة
         run: |
-          if [ -f tools/patch_android.py ]; then
-            python3 tools/patch_android.py
-          fi
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Generate launcher icons
+          rm -rf lib/transcribe lib/config.dart lib/model_manager.dart patch_android.py
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.35.3', channel: stable, cache: true }
+      - name: إنشاء مجلد android إذا ناقص
         run: |
-          if [ -f assets/icon/icon.png ]; then
-            dart run flutter_launcher_icons
+          if [ ! -d android ]; then
+            flutter create --platforms=android --project-name hashiya --org com.hashiya .
           fi
+      - name: تعديلات أندرويد (صلاحيات، إشعارات، ودجتات)
+        run: python3 tools/patch_android.py
+      - name: مفتاح توقيع ثابت (يسمح بالتحديث فوق النسخة القديمة)
+        run: |
+          if [ -f tools/debug.keystore ]; then
+            mkdir -p ~/.android
+            cp tools/debug.keystore ~/.android/debug.keystore
+          else
+            echo "تنبيه: tools/debug.keystore غير موجود، سيُستخدم مفتاح مؤقت"
+          fi
+      - name: خط ستيكرات الورق (Playpen Sans Arabic) من Google Fonts
+        run: |
+          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf && echo "تم تنزيل الخط" || echo "تعذر تنزيل الخط - يُستخدم الخط الاحتياطي"
+      - name: تحديث الاعتماديات
+        run: |
+          rm -f pubspec.lock
+          flutter pub get
+      - name: أيقونة التطبيق
+        run: dart run flutter_launcher_icons
         continue-on-error: true
-
-      - name: Build release APK
-        run: flutter build apk --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: بناء APK
+        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation --build-number=${{ github.run_number }} --dart-define=BUILD_ID=${{ github.run_number }}-$(git rev-parse --short HEAD)
+      - uses: actions/upload-artifact@v4
         with:
-          name: hashiya-release-apk
+          name: hashiya-app
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 14
+
+  ocr:
+    name: نسخة OCR أوفلاين (تجريبية)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.ocr }}
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - name: تطبيق update.zip إن وُجد في جذر المستودع
+        run: |
+          if [ -f update.zip ]; then
+            unzip -o -q update.zip -x '.github/*' 'update.zip' || true
+          fi
+          rm -rf lib/transcribe lib/config.dart lib/model_manager.dart patch_android.py
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.35.3', channel: stable, cache: true }
+      - name: إنشاء مجلد android إذا ناقص
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --project-name hashiya --org com.hashiya .
+          fi
+      - run: python3 tools/patch_android.py
+      - name: مفتاح توقيع ثابت
+        run: |
+          if [ -f tools/debug.keystore ]; then
+            mkdir -p ~/.android
+            cp tools/debug.keystore ~/.android/debug.keystore
+          fi
+      - name: خط ستيكرات الورق
+        run: |
+          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf || echo "يُستخدم الخط الاحتياطي"
+      - name: تفعيل محرك OCR (Tesseract) وتنزيل بيانات العربية
+        run: |
+          cp lib/ocr/ocr_tesseract.dart.txt lib/ocr/ocr_engine.dart
+          curl -fsSL -o assets/tessdata/ara.traineddata "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ara.traineddata"
+          rm -f pubspec.lock
+          flutter pub add flutter_tesseract_ocr
+      - name: بناء APK
+        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation --build-number=${{ github.run_number }} --dart-define=BUILD_ID=${{ github.run_number }}-ocr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashiya-full-ocr
+          path: build/app/outputs/flutter-apk/app-release.apk
