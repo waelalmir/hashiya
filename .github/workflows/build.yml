@@ -9,17 +9,31 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
 jobs:
   app:
     name: التطبيق
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
-      - name: تطبيق update.zip إن وُجد في جذر المستودع
+      - name: تطبيق update.zip بذكاء (سواء بالجذر أو داخل مجلد فرعي)
         run: |
           if [ -f update.zip ]; then
-            unzip -o -q update.zip -x '.github/*' 'update.zip' || true
-            echo "تم تطبيق update.zip"
+            rm -rf /tmp/upd_unpack
+            mkdir -p /tmp/upd_unpack
+            unzip -o -q update.zip -d /tmp/upd_unpack || true
+            SRC=/tmp/upd_unpack
+            # إذا كان كل شيء داخل مجلد فرعي واحد (مثل update-8/) ندخل إليه تلقائياً
+            SUBDIRS=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type d)
+            SUBFILES=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type f)
+            if [ -z "$SUBFILES" ] && [ "$(echo "$SUBDIRS" | wc -l)" -eq 1 ] && [ -f "$SUBDIRS/pubspec.yaml" ]; then
+              SRC="$SUBDIRS"
+            fi
+            rm -rf "$SRC/.github" "$SRC/update.zip"
+            cp -rf "$SRC"/. .
+            echo "تم تطبيق update.zip بنجاح من $SRC"
           fi
       - name: حذف ملفات قديمة لم تعد مستخدمة
         run: |
@@ -43,9 +57,9 @@ jobs:
           fi
           mkdir -p ~/.android
           cp tools/debug.keystore ~/.android/debug.keystore
-      - name: خط ستيكرات الورق (Playpen Sans Arabic) من Google Fonts
+      - name: خط ستيكرات الورق والقوالب (Playpen Sans Arabic) من Google Fonts
         run: |
-          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf && echo "تم تنزيل الخط" || echo "تعذر تنزيل الخط - يُستخدم الخط الاحتياطي"
+          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf && echo "تم تنزيل الخط" || echo "تعذر تنزيل الخط - يُستخدم الخط المرفق"
       - name: تحديث الاعتماديات
         run: |
           rm -f pubspec.lock
@@ -59,10 +73,25 @@ jobs:
         run: |
           AS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
           "$AS" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | grep -i "SHA-256" || true
+      - name: تجهيز اسم ملف APK
+        id: ver
+        run: |
+          VER=$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          cp build/app/outputs/flutter-apk/app-release.apk "hashiya-v${VER}-b${{ github.run_number }}.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: hashiya-app
           path: build/app/outputs/flutter-apk/app-release.apk
+      - name: نشر إصدار مباشر (GitHub Release) لتحميل APK بضغطة واحدة
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}-b${{ github.run_number }}
+          name: حاشية v${{ steps.ver.outputs.version }} (بناء ${{ github.run_number }})
+          body: |
+            إصدار تلقائي لتطبيق حاشية — حمّل ملف الـ APK مباشرة من الأسفل وثبّته فوق النسخة السابقة بدون حذف البيانات.
+          files: hashiya-v${{ steps.ver.outputs.version }}-b${{ github.run_number }}.apk
+          make_latest: true
 
   ocr:
     name: نسخة OCR أوفلاين (تجريبية)
@@ -71,10 +100,20 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5
-      - name: تطبيق update.zip إن وُجد في جذر المستودع
+      - name: تطبيق update.zip بذكاء
         run: |
           if [ -f update.zip ]; then
-            unzip -o -q update.zip -x '.github/*' 'update.zip' || true
+            rm -rf /tmp/upd_unpack
+            mkdir -p /tmp/upd_unpack
+            unzip -o -q update.zip -d /tmp/upd_unpack || true
+            SRC=/tmp/upd_unpack
+            SUBDIRS=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type d)
+            SUBFILES=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type f)
+            if [ -z "$SUBFILES" ] && [ "$(echo "$SUBDIRS" | wc -l)" -eq 1 ] && [ -f "$SUBDIRS/pubspec.yaml" ]; then
+              SRC="$SUBDIRS"
+            fi
+            rm -rf "$SRC/.github" "$SRC/update.zip"
+            cp -rf "$SRC"/. .
           fi
           rm -rf lib/transcribe lib/config.dart lib/model_manager.dart patch_android.py
       - uses: actions/setup-java@v5
@@ -93,9 +132,9 @@ jobs:
             mkdir -p ~/.android
             cp tools/debug.keystore ~/.android/debug.keystore
           fi
-      - name: خط ستيكرات الورق
+      - name: خط ستيكرات الورق والقوالب
         run: |
-          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf || echo "يُستخدم الخط الاحتياطي"
+          curl -fsSL -o /tmp/pp.ttf "https://github.com/google/fonts/raw/main/ofl/playpensansarabic/PlaypenSansArabic%5Bwght%5D.ttf" && cp /tmp/pp.ttf assets/fonts/PlaypenSansArabic.ttf || echo "يُستخدم الخط المرفق"
       - name: تفعيل محرك OCR (Tesseract) وتنزيل بيانات العربية
         run: |
           cp lib/ocr/ocr_tesseract.dart.txt lib/ocr/ocr_engine.dart
