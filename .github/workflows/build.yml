@@ -5,17 +5,19 @@ on:
   workflow_dispatch:
     inputs:
       ocr:
-        description: 'ابنِ أيضاً نسخة OCR أوفلاين التجريبية'
+        description: 'ابنِ أيضاً نسخة OCR أوفلاين (تُبنى تلقائياً وتُنشر في Releases)'
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
 
 jobs:
   app:
-    name: التطبيق
+    name: التطبيق (النسخة العادية)
     runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v5
       - name: تطبيق update.zip بذكاء (سواء بالجذر أو داخل مجلد فرعي)
@@ -25,7 +27,6 @@ jobs:
             mkdir -p /tmp/upd_unpack
             unzip -o -q update.zip -d /tmp/upd_unpack || true
             SRC=/tmp/upd_unpack
-            # إذا كان كل شيء داخل مجلد فرعي واحد (مثل update-8/) ندخل إليه تلقائياً
             SUBDIRS=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type d)
             SUBFILES=$(find /tmp/upd_unpack -mindepth 1 -maxdepth 1 -type f)
             if [ -z "$SUBFILES" ] && [ "$(echo "$SUBDIRS" | wc -l)" -eq 1 ] && [ -f "$SUBDIRS/pubspec.yaml" ]; then
@@ -83,19 +84,22 @@ jobs:
         with:
           name: hashiya-app
           path: build/app/outputs/flutter-apk/app-release.apk
-      - name: نشر إصدار مباشر (GitHub Release) لتحميل APK بضغطة واحدة
+      - name: نشر النسخة العادية في GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}-b${{ github.run_number }}
           name: حاشية v${{ steps.ver.outputs.version }} (بناء ${{ github.run_number }})
           body: |
-            إصدار تلقائي لتطبيق حاشية — حمّل ملف الـ APK مباشرة من الأسفل وثبّته فوق النسخة السابقة بدون حذف البيانات.
+            إصدار تلقائي لتطبيق حاشية — حمّل ملف الـ APK مباشرة من الأسفل وثبّته فوق النسخة السابقة بدون حذف البيانات:
+            - `hashiya-v${{ steps.ver.outputs.version }}-b${{ github.run_number }}.apk`: النسخة العادية الخفيفة.
+            - `hashiya-v${{ steps.ver.outputs.version }}-b${{ github.run_number }}-ocr.apk`: نسخة الـ OCR أوفلاين (بدون إنترنت وبدون استهلاك رصيد Gemini).
           files: hashiya-v${{ steps.ver.outputs.version }}-b${{ github.run_number }}.apk
           make_latest: true
 
   ocr:
-    name: نسخة OCR أوفلاين (تجريبية)
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.ocr }}
+    name: نسخة OCR أوفلاين (مباشرة في Releases)
+    needs: app
+    if: ${{ github.event_name == 'push' || inputs.ocr != false }}
     runs-on: ubuntu-22.04
     continue-on-error: true
     steps:
@@ -141,9 +145,19 @@ jobs:
           curl -fsSL -o assets/tessdata/ara.traineddata "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ara.traineddata"
           rm -f pubspec.lock
           flutter pub add flutter_tesseract_ocr
-      - name: بناء APK
+      - name: بناء APK (نسخة OCR أوفلاين)
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation --build-number=${{ github.run_number }} --dart-define=BUILD_ID=${{ github.run_number }}-ocr
+      - name: تجهيز وإرفاق ملف OCR APK في Releases
+        run: |
+          VER="${{ needs.app.outputs.version }}"
+          cp build/app/outputs/flutter-apk/app-release.apk "hashiya-v${VER}-b${{ github.run_number }}-ocr.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: hashiya-full-ocr
           path: build/app/outputs/flutter-apk/app-release.apk
+      - name: إرفاق نسخة OCR أوفلاين في نفس الـ Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.app.outputs.version }}-b${{ github.run_number }}
+          files: hashiya-v${{ needs.app.outputs.version }}-b${{ github.run_number }}-ocr.apk
+          make_latest: true
